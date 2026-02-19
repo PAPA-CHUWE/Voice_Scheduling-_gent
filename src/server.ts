@@ -8,10 +8,11 @@ async function main(): Promise<void> {
     await connectMongo();
   }
 
-  app.listen(env.PORT, () => {
-    logger.info({ port: env.PORT }, "Server listening");
-  });
-}
+
+
+app.listen(env.PORT, "0.0.0.0", () => {
+  logger.info({ port: env.PORT }, "Server listening");
+});
 
 main().catch((err) => {
   logger.error({ err }, "Fatal error");
