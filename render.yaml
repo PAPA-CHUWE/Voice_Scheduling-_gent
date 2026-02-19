@@ -1,45 +1,94 @@
-# Render.com Blueprint - Free tier
-# Deploy: connect repo, add env vars in Dashboard (sync: false keys below).
-# Free tier: service spins down after ~15 min inactivity; cold starts on next request.
-# If your repo root is the parent of server/, put this file at repo root and set rootDir: server below.
-
 services:
   - type: web
-    name: voice-scheduling-agent
-    runtime: node
-    plan: free
-    # rootDir: server   # Uncomment if render.yaml lives at repo root and app is in server/
-
-    buildCommand: npm ci && npm run build
-    startCommand: npm start
-
+    name: voice-scheduling-agent-api
+    runtime: docker
+    plan: starter
+    region: frankfurt
     healthCheckPath: /api/v1/health
-
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 5000
+
+      # ---- Required: Set these in Render dashboard as "Secret" values ----
       - key: MONGODB_URI
-        sync: false
-      - key: REDIS_URL
         sync: false
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET
         sync: false
+      - key: GOOGLE_REDIRECT_URI
+        sync: false
       - key: GOOGLE_REFRESH_TOKEN
         sync: false
+
+      # ---- Optional ----
       - key: GOOGLE_CALENDAR_ID
         value: primary
       - key: DEFAULT_TIMEZONE
         value: Africa/Harare
-      - key: RESEND_API_KEY
+
+      # Auth (optional)
+      - key: API_KEY
         sync: false
-      # Optional: set in Dashboard if needed
-      # - key: API_KEY
-      #   sync: false
-      # - key: WEBHOOK_SECRET
-      #   sync: false
-      # - key: GOOGLE_REDIRECT_URI
-      #   sync: false
+      - key: WEBHOOK_SECRET
+        sync: false
+
+      # Redis / reminders
+      - key: REDIS_URL
+        sync: false
+      - key: REMINDERS_ENABLED
+        value: "true"
+
+      # Email (if you implemented it)
+      - key: EMAIL_ENABLED
+        value: "false"
+      - key: EMAIL_FROM
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+
+  - type: worker
+    name: voice-scheduling-agent-worker
+    runtime: docker
+    plan: starter
+    region: frankfurt
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+
+      # Same secrets as API (worker needs DB + Redis + email)
+      - key: MONGODB_URI
+        sync: false
+      - key: REDIS_URL
+        sync: false
+
+      - key: REMINDERS_ENABLED
+        value: "true"
+
+      # Email (if enabled)
+      - key: EMAIL_ENABLED
+        value: "false"
+      - key: EMAIL_FROM
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+
+    # For docker runtime, Render uses the Dockerfile CMD by default.
+    # We override it to run the worker:
+    dockerCommand: npm run worker
