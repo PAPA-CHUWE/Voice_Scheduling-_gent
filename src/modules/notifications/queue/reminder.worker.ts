@@ -9,6 +9,7 @@ import { NotificationLog } from "../notificationLog.model.js";
 import * as emailService from "../email/email.service.js";
 import type { ReminderJobData } from "./reminder.queue.js";
 import { REMINDER_QUEUE_NAME } from "./reminder.queue.js";
+import { getRedisConnectionOptions } from "../../../config/redis.js";
 
 async function processReminderJob(job: Job<ReminderJobData>): Promise<void> {
   const { eventId, offsetMinutes } = job.data;
