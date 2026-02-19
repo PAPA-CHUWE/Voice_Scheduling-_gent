@@ -4,7 +4,7 @@
     
     COPY package.json package-lock.json* ./
     # Need dev deps here because tsc is a devDependency
-    RUN npm install --no-audit --no-fund --loglevel=error
+    RUN npm install
     
     COPY . .
     RUN npm run build
