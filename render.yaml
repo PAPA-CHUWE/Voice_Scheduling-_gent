@@ -1,0 +1,45 @@
+# Render.com Blueprint - Free tier
+# Deploy: connect repo, add env vars in Dashboard (sync: false keys below).
+# Free tier: service spins down after ~15 min inactivity; cold starts on next request.
+# If your repo root is the parent of server/, put this file at repo root and set rootDir: server below.
+
+services:
+  - type: web
+    name: voice-scheduling-agent
+    runtime: node
+    plan: free
+    # rootDir: server   # Uncomment if render.yaml lives at repo root and app is in server/
+
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+
+    healthCheckPath: /api/v1/health
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGODB_URI
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REFRESH_TOKEN
+        sync: false
+      - key: GOOGLE_CALENDAR_ID
+        value: primary
+      - key: DEFAULT_TIMEZONE
+        value: Africa/Harare
+      - key: RESEND_API_KEY
+        sync: false
+      # Optional: set in Dashboard if needed
+      # - key: API_KEY
+      #   sync: false
+      # - key: WEBHOOK_SECRET
+      #   sync: false
+      # - key: GOOGLE_REDIRECT_URI
+      #   sync: false
