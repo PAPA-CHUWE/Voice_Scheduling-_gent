@@ -54,27 +54,22 @@ export async function listSessions(
   query: ListSessionsQuery,
   userId?: string
 ): Promise<{ sessions: ISessionDoc[]; total: number }> {
+  const page = Math.max(1, Number(query.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(query.limit) || 20));
   const filter: Record<string, unknown> = {};
-  const hasSessionId = query.sessionId && mongoose.isValidObjectId(query.sessionId);
-
-  if (hasSessionId) {
-    filter.sessionId = new mongoose.Types.ObjectId(query.sessionId!);
-    if (userId) {
-      const session = await Session.findById(query.sessionId);
-      if (!session || session.userId?.toString() !== userId) {
-        return { sessions: [], total: 0 };
-      }
-    }
-  } else if (userId) {
-    filter.userId = new mongoose.Types.ObjectId(userId);
+  if (query.status) filter.status = query.status;
+  if (userId) {
+    filter.$or = [
+      { userId: new mongoose.Types.ObjectId(userId) },
+      { userId: null },
+      { userId: { $exists: false } },
+    ];
   }
 
   const [sessions, total] = await Promise.all([
-    Session.find(filter).sort({ createdAt: -1 }).skip((query.page - 1) * query.limit).limit(query.limit).exec(),
+    Session.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).exec(),
     Session.countDocuments(filter),
   ]);
-
-
   return { sessions, total };
 }
 
