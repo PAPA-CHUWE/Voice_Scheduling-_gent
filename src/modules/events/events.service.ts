@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { Event, type IEventDoc } from "./events.model.js";
-import { Session } from "../sessions/sessions.model.js";
+import { Session, type ISessionDoc } from "../sessions/sessions.model.js";
 import { AuditLog } from "../auditLog/auditLog.model.js";
 import { createCalendarEvent } from "../integrations/google/googleCalendar.service.js";
 import * as userService from "../user/user.service.js";
@@ -62,7 +62,7 @@ export async function createEvent(input: CreateEventInput & { idempotencyKey?: s
   });
 
   let sessionId: mongoose.Types.ObjectId | undefined;
-  let sessionDoc: Awaited<ReturnType<typeof Session.findById>> = null;
+  let sessionDoc: ISessionDoc | null = null;
   if (input.sessionId && mongoose.isValidObjectId(input.sessionId)) {
     sessionId = new mongoose.Types.ObjectId(input.sessionId);
     sessionDoc = await Session.findById(sessionId);
