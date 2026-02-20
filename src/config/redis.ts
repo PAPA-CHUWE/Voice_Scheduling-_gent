@@ -28,6 +28,11 @@ export function getRedisConnectionOptions(): {
 
 export function getRedisConnection(): Redis {
   if (!client) {
+    if (env.REDIS_URL.includes("YOUR_TOKEN") || env.REDIS_URL.includes("********")) {
+      throw new Error(
+        "REDIS_URL contains a placeholder. Set REDIS_URL in .env to your real Upstash URL (e.g. rediss://default:YOUR_ACTUAL_TOKEN@....upstash.io:6379)"
+      );
+    }
     client = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
     client.on("error", (err: Error) => logger.error({ err }, "Redis connection error"));
     client.on("connect", () => logger.info("Redis connected"));
