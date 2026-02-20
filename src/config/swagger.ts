@@ -1,6 +1,12 @@
+import path from "path";
+import { fileURLToPath } from "url";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import type { Express } from "express";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const isCompiled = __dirname.includes(`${path.sep}dist${path.sep}`);
+const routesGlob = path.join(__dirname, "..", "modules", "**", `*.routes.${isCompiled ? "js" : "ts"}`);
 
 const options: swaggerJsdoc.Options = {
   definition: {
@@ -125,8 +131,7 @@ const options: swaggerJsdoc.Options = {
       },
     },
   },
-  apis:
-    ["src/modules/**/*.routes.ts"]
+  apis: [routesGlob],
 };
 
 const spec = swaggerJsdoc(options);
