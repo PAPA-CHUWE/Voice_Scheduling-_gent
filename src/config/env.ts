@@ -21,6 +21,7 @@ const envSchema = z.object({
   EMAIL_FROM: z.string().default("Voice Agent <no-reply@yourdomain.com>"),
   RESEND_API_KEY: z.string().optional(),
   REDIS_URL: z.string().default("redis://localhost:6379"),
+  JWT_SECRET: z.string().min(1).optional(),
   REMINDERS_ENABLED: z
     .string()
     .transform((v) => v !== "false" && v !== "0")

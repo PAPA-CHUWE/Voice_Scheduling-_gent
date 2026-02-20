@@ -61,10 +61,11 @@ export async function createEvent(input: CreateEventInput & { idempotencyKey?: s
     timezone,
   });
 
-  const sessionId =
-    input.sessionId && mongoose.isValidObjectId(input.sessionId)
-      ? new mongoose.Types.ObjectId(input.sessionId)
-      : undefined;
+  const sessionId = new mongoose.Types.ObjectId(input.sessionId);
+  const sessionDoc = await Session.findById(sessionId);
+  if (!sessionDoc) {
+    throw new AppError(ErrorCodes.NOT_FOUND, "Session not found", 404);
+  }
 
   const reminderConfig = {
     enabled: input.remindersEnabled ?? true,
@@ -202,19 +203,14 @@ export async function createEvent(input: CreateEventInput & { idempotencyKey?: s
   event.notificationStatus.reminders = remindersStatus;
   await event.save();
 
-  if (sessionId) {
-    const sessionDoc = await Session.findById(sessionId);
-    if (sessionDoc) {
-      sessionDoc.status = "booked";
-      sessionDoc.userId = user._id;
-      sessionDoc.userName = input.attendeeName;
-      sessionDoc.email = user.email;
-      sessionDoc.meetingTitle = input.title;
-      sessionDoc.proposedStart = new Date(input.startIso);
-      sessionDoc.timezone = timezone;
-      await sessionDoc.save();
-    }
-  }
+  sessionDoc.status = "booked";
+  sessionDoc.userId = user._id;
+  sessionDoc.userName = input.attendeeName;
+  sessionDoc.email = user.email;
+  sessionDoc.meetingTitle = input.title;
+  sessionDoc.proposedStart = new Date(input.startIso);
+  sessionDoc.timezone = timezone;
+  await sessionDoc.save();
 
   return {
     event,
@@ -230,7 +226,7 @@ export async function createEvent(input: CreateEventInput & { idempotencyKey?: s
   };
 }
 
-export async function getEventById(id: string): Promise<IEventDoc> {
+export async function getEventById(id: string, userId?: string): Promise<IEventDoc> {
   if (!mongoose.isValidObjectId(id)) {
     throw new AppError(ErrorCodes.NOT_FOUND, "Event not found", 404);
   }
@@ -238,13 +234,29 @@ export async function getEventById(id: string): Promise<IEventDoc> {
   if (!event) {
     throw new AppError(ErrorCodes.NOT_FOUND, "Event not found", 404);
   }
+  if (userId && event.userId?.toString() !== userId) {
+    throw new AppError(ErrorCodes.FORBIDDEN, "You do not have access to this event", 403);
+  }
   return event;
 }
 
-export async function listEvents(query: ListEventsQuery): Promise<{ events: IEventDoc[]; total: number }> {
+export async function listEvents(
+  query: ListEventsQuery,
+  userId?: string
+): Promise<{ events: IEventDoc[]; total: number }> {
   const filter: Record<string, unknown> = {};
-  if (query.sessionId && mongoose.isValidObjectId(query.sessionId)) {
-    filter.sessionId = new mongoose.Types.ObjectId(query.sessionId);
+  const hasSessionId = query.sessionId && mongoose.isValidObjectId(query.sessionId);
+
+  if (hasSessionId) {
+    filter.sessionId = new mongoose.Types.ObjectId(query.sessionId!);
+    if (userId) {
+      const session = await Session.findById(query.sessionId);
+      if (!session || session.userId?.toString() !== userId) {
+        return { events: [], total: 0 };
+      }
+    }
+  } else if (userId) {
+    filter.userId = new mongoose.Types.ObjectId(userId);
   }
 
   const [events, total] = await Promise.all([

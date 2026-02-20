@@ -20,10 +20,19 @@ export const UpdateSessionSchema = z.object({
   status: z.enum(["initiated", "collecting", "confirmed", "booked", "failed"]).optional(),
 });
 
+const optionalPage = z.preprocess(
+  (v) => (v === "" || v === undefined ? undefined : v),
+  z.coerce.number().int().min(1).default(1)
+);
+const optionalLimit = z.preprocess(
+  (v) => (v === "" || v === undefined ? undefined : v),
+  z.coerce.number().int().min(1).max(100).default(20)
+);
+
 export const ListSessionsQuerySchema = z.object({
   status: z.string().optional(),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
-  page: z.coerce.number().int().min(1).default(1),
+  limit: optionalLimit,
+  page: optionalPage,
 });
 
 export type CreateSessionInput = z.infer<typeof CreateSessionSchema>;

@@ -30,7 +30,7 @@ export async function createSession(input: CreateSessionInput): Promise<ISession
   return session;
 }
 
-export async function getSessionById(id: string): Promise<ISessionDoc> {
+export async function getSessionById(id: string, userId?: string): Promise<ISessionDoc> {
   if (!mongoose.isValidObjectId(id)) {
     throw new AppError(ErrorCodes.NOT_FOUND, "Session not found", 404);
   }
@@ -38,12 +38,19 @@ export async function getSessionById(id: string): Promise<ISessionDoc> {
   if (!session) {
     throw new AppError(ErrorCodes.NOT_FOUND, "Session not found", 404);
   }
+  if (userId && session.userId?.toString() !== userId) {
+    throw new AppError(ErrorCodes.FORBIDDEN, "You do not have access to this session", 403);
+  }
   return session;
 }
 
-export async function listSessions(query: ListSessionsQuery): Promise<{ sessions: ISessionDoc[]; total: number }> {
+export async function listSessions(
+  query: ListSessionsQuery,
+  userId?: string
+): Promise<{ sessions: ISessionDoc[]; total: number }> {
   const filter: Record<string, unknown> = {};
   if (query.status) filter.status = query.status;
+  if (userId) filter.userId = new mongoose.Types.ObjectId(userId);
 
   const [sessions, total] = await Promise.all([
     Session.find(filter).sort({ createdAt: -1 }).skip((query.page - 1) * query.limit).limit(query.limit).exec(),
@@ -53,8 +60,8 @@ export async function listSessions(query: ListSessionsQuery): Promise<{ sessions
   return { sessions, total };
 }
 
-export async function updateSession(id: string, input: UpdateSessionInput): Promise<ISessionDoc> {
-  const session = await getSessionById(id);
+export async function updateSession(id: string, input: UpdateSessionInput, userId?: string): Promise<ISessionDoc> {
+  const session = await getSessionById(id, userId);
 
   if (input.userName !== undefined) session.userName = input.userName;
   if (input.meetingTitle !== undefined) session.meetingTitle = input.meetingTitle;

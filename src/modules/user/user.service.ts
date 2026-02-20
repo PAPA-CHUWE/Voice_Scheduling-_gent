@@ -41,3 +41,8 @@ export async function getUserById(id: string): Promise<IUserDoc | null> {
   if (!mongoose.isValidObjectId(id)) return null;
   return User.findById(id);
 }
+
+export async function getUserByEmail(email: string): Promise<IUserDoc | null> {
+  if (!email?.trim()) return null;
+  return User.findOne({ email: email.trim() });
+}

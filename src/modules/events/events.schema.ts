@@ -8,8 +8,10 @@ import {
   startIsoFutureSchema,
 } from "../../utils/validation.js";
 
+const objectIdSchema = z.string().min(24).max(24).regex(/^[a-f0-9]{24}$/i, "Must be a valid 24-character hex ID");
+
 export const CreateEventSchema = z.object({
-  sessionId: z.string().optional(),
+  sessionId: objectIdSchema,
   attendeeName: attendeeNameSchema,
   attendeeEmail: emailSchema.transform((v) => (v === "" ? undefined : v)),
   title: z.string().min(1, "title is required"),
@@ -22,10 +24,19 @@ export const CreateEventSchema = z.object({
   remindersEnabled: z.boolean().default(true),
 });
 
+const optionalPage = z.preprocess(
+  (v) => (v === "" || v === undefined ? undefined : v),
+  z.coerce.number().int().min(1).default(1)
+);
+const optionalLimit = z.preprocess(
+  (v) => (v === "" || v === undefined ? undefined : v),
+  z.coerce.number().int().min(1).max(100).default(20)
+);
+
 export const ListEventsQuerySchema = z.object({
   sessionId: z.string().optional(),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
-  page: z.coerce.number().int().min(1).default(1),
+  limit: optionalLimit,
+  page: optionalPage,
 });
 
 export type CreateEventInput = z.infer<typeof CreateEventSchema>;

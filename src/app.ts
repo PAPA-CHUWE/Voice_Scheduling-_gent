@@ -8,6 +8,7 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 import { apiRateLimiter } from "./middlewares/rateLimit.js";
 
 import healthRoutes from "./modules/health/health.routes.js";
+import authRoutes from "./modules/auth/auth.routes.js";
 import sessionsRoutes from "./modules/sessions/sessions.routes.js";
 import eventsRoutes from "./modules/events/events.routes.js";
 import voiceWebhookRoutes from "./modules/webhooks/voiceWebhook.routes.js";
@@ -29,6 +30,7 @@ setupSwagger(app);
 
 app.use("/api/v1/oauth", oauthRoutes);
 app.get("/oauth2callback", handleOAuthCallback);
+app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/health", healthRoutes);
 app.use("/api/v1/sessions", sessionsRoutes);
 app.use("/api/v1/events", eventsRoutes);

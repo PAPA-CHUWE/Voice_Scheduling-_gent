@@ -11,6 +11,7 @@ export const createEvent = asyncHandler(async (req: Request, res: Response) => {
     success: true,
     data: {
       eventId: result.event._id,
+      sessionId: result.event.sessionId,
       provider: "google",
       googleEventId: result.googleEventId,
       htmlLink: result.htmlLink,
@@ -24,13 +25,13 @@ export const createEvent = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const getEvent = asyncHandler(async (req: Request, res: Response) => {
-  const event = await eventsService.getEventById(req.params.id);
+  const event = await eventsService.getEventById(req.params.id, req.userId);
   res.json({ success: true, data: event });
 });
 
 export const listEvents = asyncHandler(async (req: Request, res: Response) => {
   const query = req.query as unknown as ListEventsQuery;
-  const { events, total } = await eventsService.listEvents(query);
+  const { events, total } = await eventsService.listEvents(query, req.userId);
   res.json({
     success: true,
     data: {
