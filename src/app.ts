@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import { env } from "./config/env.js";
 import { setupSwagger, getOpenApiSpec } from "./config/swagger.js";
+import { defaultQueryParams } from "./middlewares/defaultQueryParams.js";
 import { requestLogger } from "./middlewares/requestLogger.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { apiRateLimiter } from "./middlewares/rateLimit.js";
@@ -23,6 +24,7 @@ app.use(
   })
 );
 app.use(express.json({ limit: "5mb" }));
+app.use(defaultQueryParams);
 app.use(requestLogger);
 app.use(apiRateLimiter);
 

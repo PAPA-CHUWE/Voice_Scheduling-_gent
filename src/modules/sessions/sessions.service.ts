@@ -5,9 +5,15 @@ import type { CreateSessionInput, UpdateSessionInput, ListSessionsQuery } from "
 import { AppError, ErrorCodes } from "../../utils/errors.js";
 import { env } from "../../config/env.js";
 
-export async function createSession(input: CreateSessionInput): Promise<ISessionDoc> {
+export async function createSession(
+  input: CreateSessionInput,
+  callerUserId?: string
+): Promise<ISessionDoc> {
   const timezone = input.timezone || env.DEFAULT_TIMEZONE;
   let userId: mongoose.Types.ObjectId | undefined;
+  if (callerUserId) {
+    userId = new mongoose.Types.ObjectId(callerUserId);
+  }
   if (input.userName || input.email) {
     const user = await userService.upsertUser({
       name: input.userName ?? "Guest",
@@ -48,15 +54,22 @@ export async function listSessions(
   query: ListSessionsQuery,
   userId?: string
 ): Promise<{ sessions: ISessionDoc[]; total: number }> {
+  const page = Math.max(1, Number(query.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(query.limit) || 20));
   const filter: Record<string, unknown> = {};
   if (query.status) filter.status = query.status;
-  if (userId) filter.userId = new mongoose.Types.ObjectId(userId);
+  if (userId) {
+    filter.$or = [
+      { userId: new mongoose.Types.ObjectId(userId) },
+      { userId: null },
+      { userId: { $exists: false } },
+    ];
+  }
 
   const [sessions, total] = await Promise.all([
-    Session.find(filter).sort({ createdAt: -1 }).skip((query.page - 1) * query.limit).limit(query.limit).exec(),
+    Session.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).exec(),
     Session.countDocuments(filter),
   ]);
-
   return { sessions, total };
 }
 
