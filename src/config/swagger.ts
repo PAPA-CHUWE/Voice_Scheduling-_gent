@@ -136,6 +136,11 @@ const options: swaggerJsdoc.Options = {
 
 const spec = swaggerJsdoc(options);
 
+/** OpenAPI 3.0 spec as JSON (for /api/v1/openai.json, tools, etc.) */
+export function getOpenApiSpec(): ReturnType<typeof swaggerJsdoc> {
+  return spec;
+}
+
 export function setupSwagger(app: Express): void {
   app.use("/docs", swaggerUi.serve, swaggerUi.setup(spec, { explorer: true }));
 }

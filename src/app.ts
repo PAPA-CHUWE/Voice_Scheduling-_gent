@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import { env } from "./config/env.js";
-import { setupSwagger } from "./config/swagger.js";
+import { setupSwagger, getOpenApiSpec } from "./config/swagger.js";
 import { requestLogger } from "./middlewares/requestLogger.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { apiRateLimiter } from "./middlewares/rateLimit.js";
@@ -27,6 +27,11 @@ app.use(requestLogger);
 app.use(apiRateLimiter);
 
 setupSwagger(app);
+
+app.get("/api/v1/openai.json", (_req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.json(getOpenApiSpec());
+});
 
 app.use("/api/v1/oauth", oauthRoutes);
 app.get("/oauth2callback", handleOAuthCallback);
