@@ -66,6 +66,25 @@ router.get("/:id", authOptional, controller.getSession);
 /**
  * @openapi
  * /sessions/{id}:
+ *   delete:
+ *     tags: [Sessions]
+ *     summary: Delete session by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       204:
+ *         description: Session deleted
+ *       404:
+ *         description: Not found
+ */
+router.delete("/:id", authOptional, controller.deleteSession);
+
+/**
+ * @openapi
+ * /sessions/{id}:
  *   patch:
  *     tags: [Sessions]
  *     summary: Update session

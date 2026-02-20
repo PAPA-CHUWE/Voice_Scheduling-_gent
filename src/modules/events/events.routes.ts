@@ -86,4 +86,23 @@ router.get("/", authOptional, validate(ListEventsQuerySchema, "query"), controll
  */
 router.get("/:id", authOptional, controller.getEvent);
 
+/**
+ * @openapi
+ * /events/{id}:
+ *   delete:
+ *     tags: [Events]
+ *     summary: Delete event by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       204:
+ *         description: Event deleted
+ *       404:
+ *         description: Not found
+ */
+router.delete("/:id", authOptional, controller.deleteEvent);
+
 export default router;

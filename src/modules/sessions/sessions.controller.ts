@@ -28,8 +28,6 @@ export const getSession = asyncHandler(async (req: Request, res: Response) => {
 export const listSessions = asyncHandler(async (req: Request, res: Response) => {
   const query = ListSessionsQuerySchema.parse(req.query) as ListSessionsQuery;
   const { sessions, total } = await sessionsService.listSessions(query, req.userId);
-
-  console.log(sessions, total);
   res.json({
     success: true,
     data: {
@@ -37,6 +35,11 @@ export const listSessions = asyncHandler(async (req: Request, res: Response) => 
       pagination: { page: query.page, limit: query.limit, total },
     },
   });
+});
+
+export const deleteSession = asyncHandler(async (req: Request, res: Response) => {
+  await sessionsService.deleteSessionById(req.params.id, req.userId);
+  res.status(204).send();
 });
 
 export const updateSession = asyncHandler(async (req: Request, res: Response) => {

@@ -73,6 +73,11 @@ export async function listSessions(
   return { sessions, total };
 }
 
+export async function deleteSessionById(id: string, userId?: string): Promise<void> {
+  await getSessionById(id, userId);
+  await Session.findByIdAndDelete(id);
+}
+
 export async function updateSession(id: string, input: UpdateSessionInput, userId?: string): Promise<ISessionDoc> {
   const session = await getSessionById(id, userId);
 

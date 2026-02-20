@@ -29,6 +29,11 @@ export const getEvent = asyncHandler(async (req: Request, res: Response) => {
   res.json({ success: true, data: event });
 });
 
+export const deleteEvent = asyncHandler(async (req: Request, res: Response) => {
+  await eventsService.deleteEventById(req.params.id, req.userId);
+  res.status(204).send();
+});
+
 export const listEvents = asyncHandler(async (req: Request, res: Response) => {
   const query = req.query as unknown as ListEventsQuery;
   const { events, total } = await eventsService.listEvents(query, req.userId);

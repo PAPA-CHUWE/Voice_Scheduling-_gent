@@ -265,6 +265,11 @@ export async function getEventById(id: string, userId?: string): Promise<IEventD
   return event;
 }
 
+export async function deleteEventById(id: string, userId?: string): Promise<void> {
+  const event = await getEventById(id, userId);
+  await Event.findByIdAndDelete(event._id);
+}
+
 export async function listEvents(
   query: ListEventsQuery,
   userId?: string
