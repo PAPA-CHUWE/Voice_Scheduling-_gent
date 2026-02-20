@@ -123,7 +123,7 @@ When no email is provided, `confirmationEmail` and `reminders` are `"skipped"` a
 **Create event (no email → notifications skipped):**
 
 ```bash
-curl -X POST http://localhost:5000/api/v1/events \
+curl -X POST https://voice-scheduling-gent.onrender.com/api/v1/events \
   -H "Content-Type: application/json" \
   -d '{
     "attendeeName": "Jane",
@@ -136,7 +136,7 @@ curl -X POST http://localhost:5000/api/v1/events \
 **Create event with email and description:**
 
 ```bash
-curl -X POST http://localhost:5000/api/v1/events \
+curl -X POST https://voice-scheduling-gent.onrender.com/api/v1/events \
   -H "Content-Type: application/json" \
   -d '{
     "attendeeName": "Jane",
@@ -151,7 +151,7 @@ curl -X POST http://localhost:5000/api/v1/events \
 **Webhook (voice agent):**
 
 ```bash
-curl -X POST http://localhost:5000/api/v1/webhooks/voice \
+curl -X POST https://voice-scheduling-gent.onrender.com/api/v1/webhooks/voice \
   -H "Content-Type: application/json" \
   -d '{
     "type": "tool_call",
@@ -171,7 +171,7 @@ curl -X POST http://localhost:5000/api/v1/webhooks/voice \
 
 ## Swagger
 
-Open http://localhost:5000/docs for full request/response schemas (User, Event, NotificationLog, notification status, env flags).
+Open https://voice-scheduling-gent.onrender.com/docs for full request/response schemas (User, Event, NotificationLog, notification status, env flags).
 
 ## Scripts
 
