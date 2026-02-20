@@ -6,7 +6,11 @@ import type { CreateEventInput, ListEventsQuery } from "./events.schema.js";
 export const createEvent = asyncHandler(async (req: Request, res: Response) => {
   const input = req.body as CreateEventInput;
   const idempotencyKey = (req.headers["x-idempotency-key"] as string)?.trim();
-  const result = await eventsService.createEvent({ ...input, idempotencyKey: idempotencyKey || undefined });
+  const result = await eventsService.createEvent({
+    ...input,
+    idempotencyKey: idempotencyKey || undefined,
+    createdByUserId: req.userId,
+  });
   res.status(201).json({
     success: true,
     data: {

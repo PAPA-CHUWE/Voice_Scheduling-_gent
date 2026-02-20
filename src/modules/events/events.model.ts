@@ -16,6 +16,7 @@ export interface IEventReminderConfig {
 export interface IEvent {
   sessionId?: Types.ObjectId;
   userId?: Types.ObjectId;
+  createdBy?: Types.ObjectId;
   provider: "google";
   calendarId: string;
   title: string;
@@ -42,6 +43,7 @@ const EventSchema = new Schema<IEventDoc>(
   {
     sessionId: { type: Schema.Types.ObjectId, ref: "Session" },
     userId: { type: Schema.Types.ObjectId, ref: "User" },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
     provider: { type: String, default: "google" },
     calendarId: { type: String, required: true },
     title: { type: String, required: true },

@@ -41,6 +41,19 @@ router.post("/", authOptional, validate(CreateSessionSchema), controller.createS
  *   get:
  *     tags: [Sessions]
  *     summary: List sessions
+ *     parameters:
+ *       - in: query
+ *         name: sessionId
+ *         schema: { type: string }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: number }
+ *       - in: query
+ *         name: page
+ *         schema: { type: number }
+ *     responses:
+ *       200:
+ *         description: List of sessions
  */
 router.get("/", authOptional, validate(ListSessionsQuerySchema, "query"), controller.listSessions);
 

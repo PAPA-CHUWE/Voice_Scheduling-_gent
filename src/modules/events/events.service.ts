@@ -89,7 +89,9 @@ function runNotificationsInBackground(
   })();
 }
 
-export async function createEvent(input: CreateEventInput & { idempotencyKey?: string }): Promise<CreateEventResult> {
+export async function createEvent(
+  input: CreateEventInput & { idempotencyKey?: string; createdByUserId?: string }
+): Promise<CreateEventResult> {
   if (!isValidISO(input.startIso)) {
     throw new AppError(ErrorCodes.VALIDATION_ERROR, "startIso must be a valid ISO 8601 datetime", 400);
   }
@@ -151,6 +153,9 @@ export async function createEvent(input: CreateEventInput & { idempotencyKey?: s
           {
             sessionId,
             userId: user._id,
+            createdBy: input.createdByUserId && mongoose.isValidObjectId(input.createdByUserId)
+              ? new mongoose.Types.ObjectId(input.createdByUserId)
+              : undefined,
             provider: "google",
             calendarId,
             title: input.title,
@@ -259,8 +264,13 @@ export async function getEventById(id: string, userId?: string): Promise<IEventD
   if (!event) {
     throw new AppError(ErrorCodes.NOT_FOUND, "Event not found", 404);
   }
-  if (userId && event.userId?.toString() !== userId) {
-    throw new AppError(ErrorCodes.FORBIDDEN, "You do not have access to this event", 403);
+  if (userId) {
+    const isOwner = event.userId?.toString() === userId;
+    const isCreator = event.createdBy?.toString() === userId;
+    const legacyEvent = event.createdBy == null; // old events before createdBy existed
+    if (!isOwner && !isCreator && !legacyEvent) {
+      throw new AppError(ErrorCodes.FORBIDDEN, "You do not have access to this event", 403);
+    }
   }
   return event;
 }
