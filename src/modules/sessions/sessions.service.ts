@@ -25,6 +25,9 @@ export async function createSession(
   const session = await Session.create({
     channel: input.channel,
     userId,
+    createdBy: callerUserId && mongoose.isValidObjectId(callerUserId)
+      ? new mongoose.Types.ObjectId(callerUserId)
+      : undefined,
     userName: input.userName,
     email: input.email,
     timezone,
@@ -44,8 +47,13 @@ export async function getSessionById(id: string, userId?: string): Promise<ISess
   if (!session) {
     throw new AppError(ErrorCodes.NOT_FOUND, "Session not found", 404);
   }
-  if (userId && session.userId?.toString() !== userId) {
-    throw new AppError(ErrorCodes.FORBIDDEN, "You do not have access to this session", 403);
+  if (userId) {
+    const isOwner = session.userId?.toString() === userId;
+    const isCreator = session.createdBy?.toString() === userId;
+    const legacySession = session.createdBy == null;
+    if (!isOwner && !isCreator && !legacySession) {
+      throw new AppError(ErrorCodes.FORBIDDEN, "You do not have access to this session", 403);
+    }
   }
   return session;
 }
@@ -59,10 +67,12 @@ export async function listSessions(
   const filter: Record<string, unknown> = {};
   if (query.status) filter.status = query.status;
   if (userId) {
+    // Include sessions where user is owner (userId), creator (createdBy), or legacy (no createdBy)
     filter.$or = [
       { userId: new mongoose.Types.ObjectId(userId) },
-      { userId: null },
-      { userId: { $exists: false } },
+      { createdBy: new mongoose.Types.ObjectId(userId) },
+      { createdBy: null },
+      { createdBy: { $exists: false } },
     ];
   }
 

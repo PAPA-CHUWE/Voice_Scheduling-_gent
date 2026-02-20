@@ -296,7 +296,13 @@ export async function listEvents(
       }
     }
   } else if (userId) {
-    filter.userId = new mongoose.Types.ObjectId(userId);
+    // Include events where user is attendee, creator, or legacy (no createdBy)
+    filter.$or = [
+      { userId: new mongoose.Types.ObjectId(userId) },
+      { createdBy: new mongoose.Types.ObjectId(userId) },
+      { createdBy: null },
+      { createdBy: { $exists: false } },
+    ];
   }
 
   const [events, total] = await Promise.all([

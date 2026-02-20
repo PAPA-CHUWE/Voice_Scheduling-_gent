@@ -6,6 +6,7 @@ export type SessionStatus = "initiated" | "collecting" | "confirmed" | "booked" 
 export interface ISession {
   channel: SessionChannel;
   userId?: Types.ObjectId;
+  createdBy?: Types.ObjectId;
   userName?: string;
   email?: string;
   meetingTitle?: string;
@@ -26,6 +27,7 @@ const SessionSchema = new Schema<ISessionDoc>(
   {
     channel: { type: String, enum: ["web", "voice", "api"], default: "voice" },
     userId: { type: Schema.Types.ObjectId, ref: "User" },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
     userName: { type: String },
     email: { type: String },
     meetingTitle: { type: String },
