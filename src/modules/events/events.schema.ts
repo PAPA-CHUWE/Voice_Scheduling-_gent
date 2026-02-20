@@ -8,7 +8,7 @@ import {
   startIsoFutureSchema,
 } from "../../utils/validation.js";
 
-const objectIdSchema = z.string().min(24).max(24).regex(/^[a-f0-9]{24}$/i, "Must be a valid 24-character hex ID");
+const objectIdSchema = z.string().min(24).max(24).regex(/^[a-f0-9]{24}$/i, "Must be a valid 24-character hex ID").optional();
 
 export const CreateEventSchema = z.object({
   sessionId: objectIdSchema,

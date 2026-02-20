@@ -61,10 +61,14 @@ export async function createEvent(input: CreateEventInput & { idempotencyKey?: s
     timezone,
   });
 
-  const sessionId = new mongoose.Types.ObjectId(input.sessionId);
-  const sessionDoc = await Session.findById(sessionId);
-  if (!sessionDoc) {
-    throw new AppError(ErrorCodes.NOT_FOUND, "Session not found", 404);
+  let sessionId: mongoose.Types.ObjectId | undefined;
+  let sessionDoc: Awaited<ReturnType<typeof Session.findById>> = null;
+  if (input.sessionId && mongoose.isValidObjectId(input.sessionId)) {
+    sessionId = new mongoose.Types.ObjectId(input.sessionId);
+    sessionDoc = await Session.findById(sessionId);
+    if (!sessionDoc) {
+      throw new AppError(ErrorCodes.NOT_FOUND, "Session not found", 404);
+    }
   }
 
   const reminderConfig = {
@@ -203,14 +207,16 @@ export async function createEvent(input: CreateEventInput & { idempotencyKey?: s
   event.notificationStatus.reminders = remindersStatus;
   await event.save();
 
-  sessionDoc.status = "booked";
-  sessionDoc.userId = user._id;
-  sessionDoc.userName = input.attendeeName;
-  sessionDoc.email = user.email;
-  sessionDoc.meetingTitle = input.title;
-  sessionDoc.proposedStart = new Date(input.startIso);
-  sessionDoc.timezone = timezone;
-  await sessionDoc.save();
+  if (sessionDoc) {
+    sessionDoc.status = "booked";
+    sessionDoc.userId = user._id;
+    sessionDoc.userName = input.attendeeName;
+    sessionDoc.email = user.email;
+    sessionDoc.meetingTitle = input.title;
+    sessionDoc.proposedStart = new Date(input.startIso);
+    sessionDoc.timezone = timezone;
+    await sessionDoc.save();
+  }
 
   return {
     event,
