@@ -157,53 +157,57 @@ export async function createEvent(input: CreateEventInput & { idempotencyKey?: s
     message: `Google event created: ${googleResult.googleEventId}`,
   });
 
-  let confirmationStatus: "sent" | "skipped" | "failed" = "skipped";
   const toEmail = emailService.getRecipientEmail(event, user);
-  if (toEmail && env.EMAIL_ENABLED) {
-    confirmationStatus = await emailService.sendEventCreatedEmail(event, user, toEmail);
-  } else {
-    if (!toEmail) {
-      await AuditLog.create({
-        type: "email_confirmation_skipped",
-        eventId: event._id,
-        sessionId,
-        payload: { reason: "no_email" },
-        message: "Confirmation email skipped: no email provided",
-      });
-    }
-  }
+
+  const [confirmationStatus, remindersStatus] = await Promise.all([
+    (async (): Promise<"sent" | "skipped" | "failed"> => {
+      if (!toEmail || !env.EMAIL_ENABLED) {
+        if (!toEmail) {
+          await AuditLog.create({
+            type: "email_confirmation_skipped",
+            eventId: event._id,
+            sessionId,
+            payload: { reason: "no_email" },
+            message: "Confirmation email skipped: no email provided",
+          });
+        }
+        return "skipped";
+      }
+      return emailService.sendEventCreatedEmail(event, user, toEmail);
+    })(),
+    (async (): Promise<"scheduled" | "skipped" | "failed"> => {
+      if (!reminderConfig.enabled || !toEmail || !env.REMINDERS_ENABLED) {
+        if (reminderConfig.enabled && !toEmail) {
+          await AuditLog.create({
+            type: "reminders_skipped",
+            eventId: event._id,
+            payload: { reason: "no_email" },
+            message: "Reminders skipped: no email provided",
+          });
+        }
+        return "skipped";
+      }
+      const status = await scheduleRemindersForEvent(event);
+      if (status === "failed") {
+        await AuditLog.create({
+          type: "reminders_failed",
+          eventId: event._id,
+          payload: { eventId: event._id },
+          message: "Failed to schedule reminder jobs",
+        });
+      } else if (status === "scheduled") {
+        await AuditLog.create({
+          type: "reminders_scheduled",
+          eventId: event._id,
+          payload: { eventId: event._id, offsetsMinutes: reminderConfig.offsetsMinutes },
+          message: `Reminders scheduled for event ${event._id}`,
+        });
+      }
+      return status;
+    })(),
+  ]);
 
   event.notificationStatus.confirmationEmail = confirmationStatus;
-
-  let remindersStatus: "scheduled" | "skipped" | "failed" = "skipped";
-  if (reminderConfig.enabled && toEmail && env.REMINDERS_ENABLED) {
-    remindersStatus = await scheduleRemindersForEvent(event);
-    if (remindersStatus === "failed") {
-      await AuditLog.create({
-        type: "reminders_failed",
-        eventId: event._id,
-        payload: { eventId: event._id },
-        message: "Failed to schedule reminder jobs",
-      });
-    } else if (remindersStatus === "scheduled") {
-      await AuditLog.create({
-        type: "reminders_scheduled",
-        eventId: event._id,
-        payload: { eventId: event._id, offsetsMinutes: reminderConfig.offsetsMinutes },
-        message: `Reminders scheduled for event ${event._id}`,
-      });
-    }
-  } else {
-    if (reminderConfig.enabled && !toEmail) {
-      await AuditLog.create({
-        type: "reminders_skipped",
-        eventId: event._id,
-        payload: { reason: "no_email" },
-        message: "Reminders skipped: no email provided",
-      });
-    }
-  }
-
   event.notificationStatus.reminders = remindersStatus;
   await event.save();
 
