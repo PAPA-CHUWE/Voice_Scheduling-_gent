@@ -1,7 +1,6 @@
 import { z } from "zod";
 import {
   timezoneSchema,
-  emailSchema,
   reminderOffsetsMinutesSchema,
   descriptionSchema,
   attendeeNameSchema,
@@ -13,7 +12,10 @@ const objectIdSchema = z.string().min(24).max(24).regex(/^[a-f0-9]{24}$/i, "Must
 export const CreateEventSchema = z.object({
   sessionId: objectIdSchema,
   attendeeName: attendeeNameSchema,
-  attendeeEmail: emailSchema.transform((v) => (v === "" ? undefined : v)),
+  attendeeEmail: z
+    .union([z.string().email("Invalid email"), z.literal("")])
+    .optional()
+    .transform((v) => (v === "" || v === undefined ? undefined : v)),
   title: z.string().min(1, "title is required"),
   startIso: z.string().datetime({ message: "startIso must be valid ISO 8601 datetime" }).and(startIsoFutureSchema),
   durationMinutes: z.number().int().min(5).max(480).default(30),

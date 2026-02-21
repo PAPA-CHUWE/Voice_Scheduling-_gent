@@ -43,8 +43,12 @@ router.post("/", authOptional, validate(CreateSessionSchema), controller.createS
  *     summary: List sessions
  *     parameters:
  *       - in: query
- *         name: sessionId
+ *         name: status
  *         schema: { type: string }
+ *       - in: query
+ *         name: search
+ *         schema: { type: string }
+ *         description: Search by userName, email, or meetingTitle (case-insensitive)
  *       - in: query
  *         name: limit
  *         schema: { type: number }

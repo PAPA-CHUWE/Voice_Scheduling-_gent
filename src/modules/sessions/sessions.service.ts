@@ -66,6 +66,19 @@ export async function listSessions(
   const limit = Math.min(100, Math.max(1, Number(query.limit) || 20));
   const filter: Record<string, unknown> = {};
   if (query.status) filter.status = query.status;
+  const searchTrimmed = query.search?.trim();
+  if (searchTrimmed) {
+    const escaped = searchTrimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(escaped, "i");
+    filter.$and = filter.$and || [];
+    (filter.$and as object[]).push({
+      $or: [
+        { userName: regex },
+        { email: regex },
+        { meetingTitle: regex },
+      ],
+    });
+  }
   if (userId) {
     // Include sessions where user is owner (userId), creator (createdBy), or legacy (no createdBy)
     filter.$or = [

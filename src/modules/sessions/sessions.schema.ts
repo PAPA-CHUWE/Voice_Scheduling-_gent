@@ -31,6 +31,7 @@ const optionalLimit = z.preprocess(
 
 export const ListSessionsQuerySchema = z.object({
   status: z.string().optional(),
+  search: z.string().optional(),
   limit: optionalLimit,
   page: optionalPage,
 });

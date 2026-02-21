@@ -22,7 +22,7 @@ const router = Router();
  *             properties:
  *               sessionId: { type: string }
  *               attendeeName: { type: string, minLength: 2 }
- *               attendeeEmail: { type: string, format: email }
+ *               attendeeEmail: { type: string, format: email, description: "Optional. If provided, Google Calendar invite is sent to this email; if omitted or empty, no invite is sent." }
  *               title: { type: string }
  *               startIso: { type: string, format: date-time }
  *               durationMinutes: { type: number, minimum: 5, maximum: 480 }

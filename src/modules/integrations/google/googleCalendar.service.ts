@@ -8,6 +8,7 @@ import { addMinutes } from "../../../utils/time.js";
 export interface CreateCalendarEventParams {
   title: string;
   attendeeName: string;
+  attendeeEmail?: string;
   description?: string;
   startIso: string;
   durationMinutes: number;
@@ -23,7 +24,7 @@ export interface CreateCalendarEventResult {
 }
 
 export async function createCalendarEvent(params: CreateCalendarEventParams): Promise<CreateCalendarEventResult> {
-  const { title, attendeeName, description, startIso, durationMinutes, timezone } = params;
+  const { title, attendeeName, attendeeEmail, description, startIso, durationMinutes, timezone } = params;
   const calendarId = params.calendarId || env.GOOGLE_CALENDAR_ID;
   const descriptionText = description?.trim() || `Scheduled by voice agent for ${attendeeName}`;
 
@@ -44,14 +45,19 @@ export async function createCalendarEvent(params: CreateCalendarEventParams): Pr
     description: descriptionText,
     start: { dateTime: startIso, timeZone: timezone },
     end: { dateTime: endIso, timeZone: timezone },
+    ...(attendeeEmail?.trim()
+      ? { attendees: [{ email: attendeeEmail.trim(), displayName: attendeeName }] }
+      : {}),
   };
 
-  logger.info({ title, startIso, calendarId }, "Creating Google Calendar event");
+  const sendUpdates = attendeeEmail?.trim() ? "all" : "none";
+  logger.info({ title, startIso, calendarId, sendUpdates }, "Creating Google Calendar event");
 
   try {
     const res = await calendar.events.insert({
       calendarId,
       requestBody,
+      sendUpdates,
     });
 
     const eventId = res.data.id;

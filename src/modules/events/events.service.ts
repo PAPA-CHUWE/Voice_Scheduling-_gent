@@ -196,6 +196,7 @@ export async function createEvent(
     googleResult = await createCalendarEvent({
       title: input.title,
       attendeeName: input.attendeeName,
+      attendeeEmail: input.attendeeEmail,
       description: input.description,
       startIso: input.startIso,
       durationMinutes: input.durationMinutes,
